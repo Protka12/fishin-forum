@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tematy - Forum Wędkarskie</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #2b7a78;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        nav {
+            background-color: #17252a;
+            padding: 0.5rem;
+        }
+
+        nav ul {
+            display: flex;
+            justify-content: center;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin: 0 1rem;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .forum-section {
+            background-color: white;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            padding: 1rem;
+        }
+
+        .forum-section h2 {
+            border-bottom: 2px solid #2b7a78;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .topics-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .topics-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .topics-list li a {
+            color: #2b7a78;
+            text-decoration: none;
+        }
+
+        .topics-list li a:hover {
+            text-decoration: underline;
+        }
+
+        .add-topic, .add-comment {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .add-topic input[type="text"], .add-comment input[type="text"] {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .add-topic button, .add-comment button {
+            padding: 0.5rem 1rem;
+            background-color: #2b7a78;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .add-topic button:hover, .add-comment button:hover {
+            background-color: #20665c;
+        }
+
+        .comments-section {
+            margin-top: 2rem;
+        }
+
+        .comments-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .comments-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .comment-date {
+            font-size: 0.9rem;
+            color: #666;
+            margin-right: 1rem;
+        }
+
+        footer {
+            background-color: #17252a;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: auto;
+        }
+        .notification {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: #4caf50;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+        .notification.show {
+            display: block;
+        }
+        main {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Forum Wędkarskie</h1>
+        <p>Tematy</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="index.html">Strona główna</a></li>
+            <li><a href="kategorie.html">Kategorie</a></li>
+            <li><a href="onas.html">O nas</a></li>
+            <li><a href="login.html">Zaloguj się</a></li>
+            <li><a href="register.html">Zarejestruj się</a></li>
+        </ul>
+    </nav>
+    
+
+    <main class="container">
+        <section class="forum-section">
+            <h2>Tematy dyskusji</h2>
+            <ul class="topics-list" id="topicsList">
+            </ul>
+            <div class="add-topic">
+                <input type="text" id="newTopic" placeholder="Wpisz nazwę nowego tematu...">
+                <button onclick="addTopic()">Dodaj temat</button>
+            </div>
+        </section>
+
+        <section class="forum-section comments-section" id="commentsSection" style="display: none;">
+            <h2>Komentarze</h2>
+            <ul class="comments-list" id="commentsList">
+            </ul>
+            <div class="add-comment">
+                <input type="text" id="newComment" placeholder="Wpisz treść nowego komentarza...">
+                <button onclick="addComment()">Dodaj komentarz</button>
+            </div>
+            <button onclick="goBackToTopics()">Powrót do tematów</button>
+        </section>
+    </main>
+    
+
+
+    <script>
+        const topicsList = document.getElementById('topicsList');
+        const commentsSection = document.getElementById('commentsSection');
+        const commentsList = document.getElementById('commentsList');
+        let currentTopicIndex = null;
+
+        function loadTopics() {
+            const topics = JSON.parse(localStorage.getItem('topics')) || [];
+            topicsList.innerHTML = '';
+            topics.forEach((topic, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<a href="#" onclick="viewComments(${index})">${topic.title}</a>`;
+                topicsList.appendChild(li);
+            });
+        }
+
+        function addTopic() {
+            const newTopicInput = document.getElementById('newTopic');
+            const newTopic = newTopicInput.value.trim();
+            if (newTopic) {
+                const topics = JSON.parse(localStorage.getItem('topics')) || [];
+                topics.push({ title: newTopic, comments: [] });
+                localStorage.setItem('topics', JSON.stringify(topics));
+                newTopicInput.value = '';
+                loadTopics();
+            }
+        }
+
+
+        function viewComments(index) {
+            currentTopicIndex = index;
+            const topics = JSON.parse(localStorage.getItem('topics')) || [];
+            const topic = topics[index];
+            commentsList.innerHTML = '';
+            topic.comments.forEach(comment => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="comment-date">${comment.date}</span><span>${comment.text}</span>`;
+                commentsList.appendChild(li);
+            });
+            commentsSection.style.display = 'block';
+            topicsList.parentElement.style.display = 'none';
+        }
+
+        function addComment() {
+            const newCommentInput = document.getElementById('newComment');
+            const newComment = newCommentInput.value.trim();
+            if (newComment && currentTopicIndex !== null) {
+                const topics = JSON.parse(localStorage.getItem('topics')) || [];
+                const now = new Date();
+                const formattedDate = `${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+                topics[currentTopicIndex].comments.push({ text: newComment, date: formattedDate });
+                localStorage.setItem('topics', JSON.stringify(topics));
+                newCommentInput.value = '';
+                viewComments(currentTopicIndex);
+            }
+        }
+
+ 
+        function goBackToTopics() {
+            commentsSection.style.display = 'none';
+            topicsList.parentElement.style.display = 'block';
+        }
+
+        loadTopics();
+    </script>
+</body>
+</html>
